@@ -1,0 +1,32 @@
+id: complex_rules_with_multiple_operators
+expr: ((Amount gt 1000) and ((Currency eq 'GBP') or (Currency eq 'CAD') or not((UserType eq 'Guest'))) and ((Country eq 'USA') and not((User eq true))))
+conditions:
+  and: # Level 1 operator: All conditions under this 'and' must be true.
+    - condition: # Condition 1 at Level 2, directly under the Level 1 'and'.
+        attribute: Amount
+        operator: gt
+        value: 1000
+    - or: # Operator 2 at Level 2: If any of the conditions under this 'or' are true.
+        - condition: # Condition 1 at Level 3, directly under the Level 2 'or'.
+            attribute: Currency
+            operator: eq
+            value: GBP
+        - condition: # Condition 2 at Level 3, directly under the Level 2 'or'.
+            attribute: Currency
+            operator: eq
+            value: CAD
+        - not: # Operator 3 at Level 3: Negates the condition(s) directly under it.
+            - condition: # Condition 1 at Level 4, directly under the Level 3 'not'.
+                attribute: UserType
+                operator: eq
+                value: Guest
+    - and: # Operator 3 at Level 2: Another operator at the same level as 'or', requiring all its sub-conditions to be true.
+        - condition: # Condition 1 at Level 3, directly under the Level 2 'and'.
+            attribute: Country
+            operator: eq
+            value: USA
+        - not: # Operator 2 at Level 3: Negates the condition directly under it.
+            - condition: # Condition 1 at Level 4, directly under the Level 3 'not'.
+                attribute: User
+                operator: eq
+                value: true

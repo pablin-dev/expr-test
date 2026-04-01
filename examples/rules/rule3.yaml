@@ -1,0 +1,28 @@
+id: euro_small_non_usa_admin
+expr: (Amount lt 100 or Currency eq 'EUR') and (not(Country eq 'USA') or (UserType eq 'Admin' and User eq true))
+conditions:
+  and:
+    - or:
+        - condition:
+            attribute: Amount
+            operator: lt
+            value: 100
+        - condition:
+            attribute: Currency
+            operator: eq
+            value: EUR
+    - or:
+        - not:
+            - condition:
+                attribute: Country
+                operator: eq
+                value: USA
+        - and:
+            - condition:
+                attribute: UserType
+                operator: eq
+                value: Admin
+            - condition:
+                attribute: User
+                operator: eq
+                value: true

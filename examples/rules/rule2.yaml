@@ -1,0 +1,23 @@
+id: vip_high_value_uk
+expr: (UserType eq 'VIP' or (Amount gte 5000 and Country eq 'UK')) and not(User eq false)
+conditions:
+  and:
+    - or:
+        - condition:
+            attribute: UserType
+            operator: eq
+            value: VIP
+        - and:
+            - condition:
+                attribute: Amount
+                operator: gte
+                value: 5000
+            - condition:
+                attribute: Country
+                operator: eq
+                value: UK
+    - not:
+        - condition:
+            attribute: User
+            operator: eq
+            value: false
