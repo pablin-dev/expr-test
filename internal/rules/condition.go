@@ -2,7 +2,6 @@ package rules
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -20,28 +19,6 @@ type Condition struct {
 	Attribute string `yaml:"attribute" validate:"required"`
 	Operator  string `yaml:"operator" validate:"required"`
 	Value     any    `yaml:"value" validate:"required"` // Value can be string, number, boolean, etc.
-}
-
-// Helper function to check if a string represents a number.
-func isNumber(s string) bool {
-	if s == "" {
-		return false
-	}
-	var dotSeen bool
-	for i, char := range s {
-		if char == '.' {
-			if dotSeen {
-				return false
-			}
-			dotSeen = true
-		} else if char < '0' || char > '9' {
-			if i == 0 && char == '-' { // Allow leading minus sign
-				continue
-			}
-			return false
-		}
-	}
-	return true
 }
 
 var unquotedAttributes = map[string]bool{
@@ -141,61 +118,4 @@ func (n *ConditionNode) ToExpr() string {
 	}
 
 	return ""
-}
-
-// // NormalizeExprString replaces common rule operators with their expression language equivalents.
-// func NormalizeExprString(expr string) string {
-// 	replacements := map[string]string{
-// 		" eq ":  " == ",
-// 		" gt ":  " > ",
-// 		" lt ":  " < ",
-// 		" gte ": " >= ",
-// 		" lte ": " <= ",
-// 	}
-// 	normalizedExpr := expr
-// 	for old, new := range replacements {
-// 		normalizedExpr = strings.ReplaceAll(normalizedExpr, old, new)
-// 	}
-// 	return normalizedExpr
-// }
-
-func NormalizeExprString(expr string) string {
-	// 1. First, replace the operators
-	replacements := map[string]string{
-		" eq ":  " == ",
-		" gt ":  " > ",
-		" lt ":  " < ",
-		" gte ": " >= ",
-		" lte ": " <= ",
-	}
-
-	normalized := expr
-	for old, new := range replacements {
-		normalized = strings.ReplaceAll(normalized, old, new)
-	}
-
-	// 2. Fix the quoting logic
-	// This Regex looks for: Attribute == Value
-	// It captures the Attribute in ${1} and the Value in ${2}
-	re := regexp.MustCompile(`(\w+)\s+==\s+([\w']+)`)
-
-	return re.ReplaceAllStringFunc(normalized, func(match string) string {
-		submatches := re.FindStringSubmatch(match)
-		attr := submatches[1]
-		val := submatches[2]
-
-		// If it's already quoted, or it's a boolean/number, leave it alone
-		if strings.HasPrefix(val, "'") || val == "true" || val == "false" {
-			return match
-		}
-
-		// If the attribute is NOT a constant (like Currency), it needs quotes
-		// We use the same 'unquotedAttributes' logic here
-		if !unquotedAttributes[attr] {
-			return fmt.Sprintf("%s == '%s'", attr, val)
-		}
-
-		// Otherwise (like Currency == GBP), leave it as an identifier
-		return match
-	})
 }
