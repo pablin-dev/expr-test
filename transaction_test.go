@@ -13,7 +13,7 @@ type TestCase struct {
 
 func TestRuleEvaluations(t *testing.T) {
 	// Initialize the expr client
-	client := NewClient(Options{EnvType: rules.Payment{}})
+	client := NewClient()
 
 	rulesFiles := []string{
 		"examples/rules/rule.yaml",

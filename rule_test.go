@@ -11,7 +11,7 @@ import (
 
 func TestPaymentEvaluation(t *testing.T) {
 	// Initialize the expr client
-	client := NewClient(Options{EnvType: rules.Payment{}})
+	client := NewClient()
 
 	// The expected expression from rule.yaml
 	// expr: ((Amount gt 1000) and ((Currency eq 'GBP') or (Currency eq 'CAD') or not((UserType eq 'Guest'))) and ((Country eq 'USA') and not((User eq true))))
@@ -86,7 +86,7 @@ func TestPaymentEvaluation(t *testing.T) {
 
 func TestExpressionConsistency(t *testing.T) {
 	// Initialize the expr client
-	client := NewClient(Options{EnvType: rules.Payment{}})
+	client := NewClient()
 
 	ruleFiles := []string{
 		"examples/rules/rule.yaml",
@@ -139,7 +139,7 @@ func TestExpressionConsistency(t *testing.T) {
 
 func TestEdgeCases(t *testing.T) {
 	// Initialize the expr client
-	client := NewClient(Options{EnvType: rules.Payment{}})
+	client := NewClient()
 
 	// Rule from rule2.yaml: (UserType eq 'VIP' or (Amount gte 5000 and Country eq 'UK')) and not(User eq false)
 	// Equivalent: (UserType == 'VIP' or (Amount >= 5000 and Country == 'UK')) and User == true
@@ -233,7 +233,7 @@ func TestEdgeCases(t *testing.T) {
 
 func TestRule3Evaluation(t *testing.T) {
 	// Initialize the expr client
-	client := NewClient(Options{EnvType: rules.Payment{}})
+	client := NewClient()
 
 	// Rule 3: (Amount lt 100 or Currency eq 'EUR') and (not(Country eq 'USA') or (UserType eq 'Admin' and User eq true))
 	rule, _ := ParseYAML("examples/rules/rule3.yaml")
@@ -286,7 +286,7 @@ func TestRule3Evaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _ := expr.Run(program, tt.payment)
+			got, _ := client.Run(program, tt.payment)
 			if got != tt.want {
 				t.Errorf("%s: got %v, want %v", tt.name, got, tt.want)
 			}

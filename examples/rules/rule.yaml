@@ -1,5 +1,5 @@
 id: complex_rules_with_multiple_operators
-expr: ((Amount gt 1000) and ((Currency eq 'GBP') or (Currency eq 'CAD') or not((UserType eq 'Guest'))) and ((Country eq 'USA') and not((User eq true))))
+expr: ((Amount gt 1000) and ((Currency eq GBP) or (Currency eq CAD) or not((UserType eq Guest))) and ((Country eq USA) and not((User eq true))))
 conditions:
   and: # Level 1 operator: All conditions under this 'and' must be true.
     - condition: # Condition 1 at Level 2, directly under the Level 1 'and'.

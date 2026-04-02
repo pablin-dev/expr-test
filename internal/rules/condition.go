@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -43,6 +44,10 @@ func isNumber(s string) bool {
 	return true
 }
 
+var unquotedAttributes = map[string]bool{
+	"Currency": true,
+}
+
 // ToExpr converts the ConditionNodeConfig structure into an expr-compatible string.
 func (n *ConditionNode) ToExpr() string {
 	if n == nil {
@@ -52,36 +57,45 @@ func (n *ConditionNode) ToExpr() string {
 	// Handle base condition
 	if n.Condition != nil {
 		cond := n.Condition
-		op := cond.Operator
-		switch op {
-		case "eq":
-			op = "=="
-		case "gt":
-			op = ">"
-		case "lt":
-			op = "<"
-		case "gte":
-			op = ">="
-		case "lte":
-			op = "<="
+		// Map your custom operators to Expr/Go operators
+		opMap := map[string]string{
+			"eq":  "==",
+			"gt":  ">",
+			"lt":  "<",
+			"gte": ">=",
+			"lte": "<=",
+		}
+
+		op, ok := opMap[cond.Operator]
+		if !ok {
+			op = cond.Operator // Fallback if already converted
 		}
 
 		val := cond.Value
-		// Format value: quote strings if they are not boolean literals or numbers
+		// Format value: Handle Booleans, Identifiers (Constants), and Strings
 		if s, ok := val.(string); ok {
-			if s != "true" && s != "false" {
+			switch {
+			case s == "true" || s == "false":
+				// Boolean literals should not be quoted
+				val = s
+			case unquotedAttributes[cond.Attribute]:
+				// If the attribute is 'Currency', we want: Currency == GBP
+				// This allows Expr to match the type of your Go constant.
+				val = s
+			default:
+				// Regular strings (e.g., 'Guest') must be quoted
 				val = fmt.Sprintf("'%s'", s)
 			}
 		}
+
 		return fmt.Sprintf("(%s %s %v)", cond.Attribute, op, val)
 	}
 
-	// Handle logical operators (AND, OR, NOT)
+	// Handle logical operators (AND)
 	if len(n.And) > 0 {
 		var parts []string
 		for _, child := range n.And {
-			expr := child.ToExpr()
-			if expr != "" {
+			if expr := child.ToExpr(); expr != "" {
 				parts = append(parts, expr)
 			}
 		}
@@ -89,16 +103,16 @@ func (n *ConditionNode) ToExpr() string {
 			return ""
 		}
 		if len(parts) == 1 {
-			return parts[0] // If only one child, return its expression directly
+			return parts[0]
 		}
 		return "(" + strings.Join(parts, " and ") + ")"
 	}
 
+	// Handle logical operators (OR)
 	if len(n.Or) > 0 {
 		var parts []string
 		for _, child := range n.Or {
-			expr := child.ToExpr()
-			if expr != "" {
+			if expr := child.ToExpr(); expr != "" {
 				parts = append(parts, expr)
 			}
 		}
@@ -111,11 +125,11 @@ func (n *ConditionNode) ToExpr() string {
 		return "(" + strings.Join(parts, " or ") + ")"
 	}
 
+	// Handle logical operators (NOT)
 	if len(n.Not) > 0 {
 		var parts []string
 		for _, child := range n.Not {
-			expr := child.ToExpr()
-			if expr != "" {
+			if expr := child.ToExpr(); expr != "" {
 				parts = append(parts, expr)
 			}
 		}
@@ -126,11 +140,27 @@ func (n *ConditionNode) ToExpr() string {
 		return "not(" + inner + ")"
 	}
 
-	return "" // Should not reach here if struct is properly formed
+	return ""
 }
 
-// NormalizeExprString replaces common rule operators with their expression language equivalents.
+// // NormalizeExprString replaces common rule operators with their expression language equivalents.
+// func NormalizeExprString(expr string) string {
+// 	replacements := map[string]string{
+// 		" eq ":  " == ",
+// 		" gt ":  " > ",
+// 		" lt ":  " < ",
+// 		" gte ": " >= ",
+// 		" lte ": " <= ",
+// 	}
+// 	normalizedExpr := expr
+// 	for old, new := range replacements {
+// 		normalizedExpr = strings.ReplaceAll(normalizedExpr, old, new)
+// 	}
+// 	return normalizedExpr
+// }
+
 func NormalizeExprString(expr string) string {
+	// 1. First, replace the operators
 	replacements := map[string]string{
 		" eq ":  " == ",
 		" gt ":  " > ",
@@ -138,9 +168,34 @@ func NormalizeExprString(expr string) string {
 		" gte ": " >= ",
 		" lte ": " <= ",
 	}
-	normalizedExpr := expr
+
+	normalized := expr
 	for old, new := range replacements {
-		normalizedExpr = strings.ReplaceAll(normalizedExpr, old, new)
+		normalized = strings.ReplaceAll(normalized, old, new)
 	}
-	return normalizedExpr
+
+	// 2. Fix the quoting logic
+	// This Regex looks for: Attribute == Value
+	// It captures the Attribute in ${1} and the Value in ${2}
+	re := regexp.MustCompile(`(\w+)\s+==\s+([\w']+)`)
+
+	return re.ReplaceAllStringFunc(normalized, func(match string) string {
+		submatches := re.FindStringSubmatch(match)
+		attr := submatches[1]
+		val := submatches[2]
+
+		// If it's already quoted, or it's a boolean/number, leave it alone
+		if strings.HasPrefix(val, "'") || val == "true" || val == "false" {
+			return match
+		}
+
+		// If the attribute is NOT a constant (like Currency), it needs quotes
+		// We use the same 'unquotedAttributes' logic here
+		if !unquotedAttributes[attr] {
+			return fmt.Sprintf("%s == '%s'", attr, val)
+		}
+
+		// Otherwise (like Currency == GBP), leave it as an identifier
+		return match
+	})
 }

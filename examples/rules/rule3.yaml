@@ -1,5 +1,5 @@
 id: euro_small_non_usa_admin
-expr: (Amount lt 100 or Currency eq 'EUR') and (not(Country eq 'USA') or (UserType eq 'Admin' and User eq true))
+expr: (Amount lt 100 or Currency eq EUR) and (not(Country eq 'USA') or (UserType eq 'Admin' and User eq true))
 conditions:
   and:
     - or:
