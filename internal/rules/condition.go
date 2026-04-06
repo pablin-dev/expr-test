@@ -41,6 +41,7 @@ func (n *ConditionNode) ToExpr() string {
 			"lt":  "<",
 			"gte": ">=",
 			"lte": "<=",
+			"in":  "in", // Add this line for the 'in' operator
 		}
 
 		op, ok := opMap[cond.Operator]
@@ -48,24 +49,56 @@ func (n *ConditionNode) ToExpr() string {
 			op = cond.Operator // Fallback if already converted
 		}
 
-		val := cond.Value
-		// Format value: Handle Booleans, Identifiers (Constants), and Strings
-		if s, ok := val.(string); ok {
-			switch {
-			case s == "true" || s == "false":
-				// Boolean literals should not be quoted
-				val = s
-			case unquotedAttributes[cond.Attribute]:
-				// If the attribute is 'Currency', we want: Currency == GBP
-				// This allows Expr to match the type of your Go constant.
-				val = s
-			default:
-				// Regular strings (e.g., 'Guest') must be quoted
-				val = fmt.Sprintf("'%s'", s)
+		var formattedValue string
+		// Special handling for the 'in' operator which expects a list
+		if cond.Operator == "in" {
+			// We expect cond.Value to be a slice (e.g., []any)
+			if sliceVal, ok := cond.Value.([]any); ok {
+				var elements []string
+				for _, elem := range sliceVal {
+					// Format each element within the slice
+					switch e := elem.(type) {
+					case string:
+						// Quote string elements
+						elements = append(elements, fmt.Sprintf("'%s'", e))
+					case bool:
+						// Booleans are represented as is
+						elements = append(elements, fmt.Sprintf("%v", e))
+					case float64, int, float32, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
+						// Numeric types are represented as is
+						elements = append(elements, fmt.Sprintf("%v", e))
+					default:
+						// Fallback for any other types in the slice
+						elements = append(elements, fmt.Sprintf("%v", elem))
+					}
+				}
+				formattedValue = fmt.Sprintf("[%s]", strings.Join(elements, ", "))
+			} else {
+				// If cond.Value is not a slice for 'in' operator, represent it as is (or log an error/warning)
+				// For now, just use %v, but ideally this should be an error.
+				formattedValue = fmt.Sprintf("%v", cond.Value)
 			}
+		} else {
+			// Standard value formatting for other operators (eq, gt, lt, etc.)
+			val := cond.Value
+			if s, ok := val.(string); ok {
+				switch {
+				case s == "true" || s == "false":
+					// Boolean literals should not be quoted
+					val = s
+				case unquotedAttributes[cond.Attribute]:
+					// If the attribute is 'Currency', we want: Currency == GBP
+					// This allows Expr to match the type of your Go constant.
+					val = s
+				default:
+					// Regular strings (e.g., 'Guest') must be quoted
+					val = fmt.Sprintf("'%s'", s)
+				}
+			}
+			formattedValue = fmt.Sprintf("%v", val)
 		}
 
-		return fmt.Sprintf("(%s %s %v)", cond.Attribute, op, val)
+		return fmt.Sprintf("(%s %s %s)", cond.Attribute, op, formattedValue)
 	}
 
 	// Handle logical operators (AND)
