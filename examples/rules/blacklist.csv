@@ -1,0 +1,11 @@
+Name,Mail,ID,Country,Type,Balance,IsActive
+User1,test1@example.com,1,USA,Admin,1000.50,true
+User2,test2@example.com,2,UK,Guest,200.00,false
+User3,test3@example.com,3,Canada,VIP,5000.75,true
+User4,test4@example.com,4,Germany,Member,0.00,true
+User5,test5@example.com,5,France,Guest,10.25,false
+User6,test6@example.com,6,Italy,Member,99.99,true
+User7,test7@example.com,7,Spain,VIP,1234.56,true
+User8,test8@example.com,8,Japan,Guest,50.00,false
+User9,test9@example.com,9,Brazil,Member,777.77,true
+User10,test10@example.com,10,USA,Admin,10000.00,true

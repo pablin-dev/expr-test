@@ -16,7 +16,11 @@ func ParseYAML(filePath string) (*rules.RuleConfig, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open YAML file: %w", err)
 	}
-	defer yamlFile.Close()
+	defer func() {
+		if err := yamlFile.Close(); err != nil {
+			fmt.Printf("failed to close yaml file: %v\n", err)
+		}
+	}()
 
 	byteValue, err := io.ReadAll(yamlFile)
 	if err != nil {

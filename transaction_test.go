@@ -172,7 +172,7 @@ func TestRuleEvaluations(t *testing.T) {
 			for _, tc := range testCases {
 				t.Run(tc.name, func(t *testing.T) {
 					// Evaluation using generated expr
-					got, err := client.Run(program, tc.payment)
+					got, err := client.Run(program, tc.payment, nil)
 					if err != nil {
 						t.Fatalf("Run failed: %v", err)
 					}
@@ -181,7 +181,7 @@ func TestRuleEvaluations(t *testing.T) {
 					}
 
 					// Verification using original YAML expr (normalized)
-					gotYaml, err := client.Run(yamlProgram, tc.payment)
+					gotYaml, err := client.Run(yamlProgram, tc.payment, nil)
 					if err != nil {
 						t.Fatalf("YAML Run failed: %v", err)
 					}

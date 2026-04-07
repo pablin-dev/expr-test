@@ -256,13 +256,13 @@ func TestConditionNodeToExpr(t *testing.T) {
 			expected: "not(((a == 1) and (b == 2)))",
 		},
 		{
-			name: "Empty ConditionNode",
-			node: ConditionNode{},
+			name:     "Empty ConditionNode",
+			node:     ConditionNode{},
 			expected: "",
 		},
 		{
-			name: "Nil ConditionNode",
-			node: ConditionNode{}, // Representing a nil ConditionNode passed by value
+			name:     "Nil ConditionNode",
+			node:     ConditionNode{}, // Representing a nil ConditionNode passed by value
 			expected: "",
 		},
 		{

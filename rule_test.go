@@ -66,7 +66,7 @@ func TestPaymentEvaluation(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
-			got, err := client.Run(program, tt.payment)
+			got, err := client.Run(program, tt.payment, nil)
 			if err != nil {
 				t.Fatalf("Run failed: %v", err)
 			}
@@ -120,11 +120,11 @@ func TestExpressionConsistency(t *testing.T) {
 			}
 
 			for i, p := range testInputs {
-				resGen, err := client.Run(progGen, p)
+				resGen, err := client.Run(progGen, p, nil)
 				if err != nil {
 					t.Fatalf("Run failed: %v", err)
 				}
-				resYaml, err := client.Run(progYaml, p)
+				resYaml, err := client.Run(progYaml, p, nil)
 				if err != nil {
 					t.Fatalf("Run failed: %v", err)
 				}
@@ -219,7 +219,7 @@ func TestEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := client.Run(program, tt.payment)
+			got, err := client.Run(program, tt.payment, nil)
 			if err != nil {
 				t.Fatalf("Run failed: %v", err)
 			}
@@ -285,7 +285,7 @@ func TestRule3Evaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := client.Run(program, tt.payment)
+			got, err := client.Run(program, tt.payment, nil)
 			if err != nil {
 				t.Errorf("%s: run failed: %v", tt.name, err)
 			}

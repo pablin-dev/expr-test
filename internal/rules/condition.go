@@ -41,7 +41,7 @@ func (n *ConditionNode) ToExpr() string {
 			"lt":  "<",
 			"gte": ">=",
 			"lte": "<=",
-			"in":  "in", // Add this line for the 'in' operator
+			"in":  "in",
 		}
 
 		op, ok := opMap[cond.Operator]

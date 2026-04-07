@@ -15,4 +15,7 @@ type Payment struct {
 	UserType string
 	Country  string
 	User     bool
+	Mail     string
+	Name     string
+	IsActive bool
 }

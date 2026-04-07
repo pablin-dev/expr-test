@@ -1,11 +1,30 @@
-# This rule blocks transactions from emails in the blacklist.
-rule:
-  name: "Block blacklisted emails"
+id: euro_small_non_usa_admin
+expr: (Amount gt 1000) and (not( Mail in blacklisted.Mail ) and not( Name in blacklisted.Name ) and not( Amount in blacklisted.Balance ) and not( IsActive in blacklisted.IsActive ))
+conditions:
+  name: "Block blacklisted emails, names, balances, and status with amount greater than 1000"
   condition:
-    condition:
-      attribute: "user.email"
-      operator: "in"
-      value:
-        - "bad.email@example.com"
-        - "another.bad.email@example.com"
-        - "spam@domain.com"
+    and:
+      - condition:
+          attribute: Amount
+          operator: gt
+          value: 1000
+      - not:
+          - condition:
+              attribute: Mail
+              operator: in
+              value: blacklisted.Mail
+      - not:
+          - condition:
+              attribute: Name
+              operator: in
+              value: blacklisted.Name
+      - not:
+          - condition:
+              attribute: Amount
+              operator: in
+              value: blacklisted.Balance
+      - not:
+          - condition:
+              attribute: IsActive
+              operator: in
+              value: blacklisted.IsActive
