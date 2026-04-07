@@ -152,3 +152,38 @@ func (n *ConditionNode) ToExpr() string {
 
 	return ""
 }
+
+// FromExpr attempts to parse an expr-compatible string into a ConditionNode.
+// NOTE: This is a basic implementation and does not support full expression parsing.
+func FromExpr(expr string) (ConditionNode, error) {
+	// Simple parsing for (attribute operator value)
+	s := strings.Trim(expr, "()")
+	parts := strings.Fields(s)
+	if len(parts) != 3 {
+		return ConditionNode{}, fmt.Errorf("unsupported expression format: %s", expr)
+	}
+
+	opMap := map[string]string{
+		"==": "eq",
+		">":  "gt",
+		"<":  "lt",
+		">=": "gte",
+		"<=": "lte",
+		"in": "in",
+	}
+
+	op, ok := opMap[parts[1]]
+	if !ok {
+		op = parts[1]
+	}
+
+	val := strings.Trim(parts[2], "'")
+	return ConditionNode{
+		Condition: &Condition{
+			Attribute: parts[0],
+			Operator:  op,
+			Value:     val,
+		},
+	}, nil
+}
+

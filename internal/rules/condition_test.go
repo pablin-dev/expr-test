@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConditionValidation(t *testing.T) {
@@ -343,6 +344,102 @@ func TestNormalizeExprString(t *testing.T) {
 	}
 }
 
-// Note: Testing ConditionNode directly in condition.go is limited as it lacks methods.
-// Its structural validity and how it forms expressions are better tested within model.go's ToExpr tests.
-// This test file focuses on validations defined within condition.go for the Condition struct.
+func TestFromExpr(t *testing.T) {
+	tests := []struct {
+		name    string
+		expr    string
+		want    ConditionNode
+		wantErr bool
+	}{
+		{
+			name: "Eq operator",
+			expr: "(name == 'Alice')",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "name",
+					Operator:  "eq",
+					Value:     "Alice",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Gt operator",
+			expr: "(age > 30)",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "age",
+					Operator:  "gt",
+					Value:     "30",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Lt operator",
+			expr: "(count < 10)",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "count",
+					Operator:  "lt",
+					Value:     "10",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Gte operator",
+			expr: "(score >= 90)",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "score",
+					Operator:  "gte",
+					Value:     "90",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Lte operator",
+			expr: "(score <= 90)",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "score",
+					Operator:  "lte",
+					Value:     "90",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "In operator",
+			expr: "(status in 'active')",
+			want: ConditionNode{
+				Condition: &Condition{
+					Attribute: "status",
+					Operator:  "in",
+					Value:     "active",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Invalid expression",
+			expr:    "name eq",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FromExpr(tt.expr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FromExpr() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !assert.Equal(t, tt.want, got) {
+				t.Errorf("FromExpr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
